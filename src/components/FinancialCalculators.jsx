@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Wallet, Landmark, ArrowRight, X, Info, Calculator, Percent, ShieldCheck } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
@@ -417,7 +417,7 @@ function RetirementCalc({ inputs }) {
         </div>
         <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm text-center">
           <p className="text-[10px] font-bold text-gs-slate uppercase tracking-tighter">Projected {gap > 0 ? 'Gap' : 'Surplus'}</p>
-          <p={`text-lg font-semibold ${gap > 0 ? 'text-red-500' : 'text-green-600'}`}>
+          <p className={`text-lg font-semibold ${gap > 0 ? 'text-red-500' : 'text-green-600'}`}>
             ${Math.abs(gap / 1000000).toFixed(2)}M
           </p>
         </div>
@@ -501,4 +501,3 @@ function TaxCalc({ inputs }) {
   );
 }
 
-import { useMemo } from 'react';
