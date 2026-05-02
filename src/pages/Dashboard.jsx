@@ -9,6 +9,7 @@ import TransparencyModal from '../components/TransparencyModal';
 import MacroTracker from '../components/MacroTracker';
 import StockPopup from '../components/StockPopup';
 import PortfolioHeatmap from '../components/PortfolioHeatmap';
+import FinancialCalculators from '../components/FinancialCalculators';
 import { LayoutGrid } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 
@@ -156,7 +157,8 @@ export default function Dashboard({ riskProfile }) {
           </div>
         </div>
 
-        {/* Next Section: MacroTracker */}
+        {/* Investment & Retirement Planning Section */}
+        <FinancialCalculators />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
           {/* Left Column: Indicators */}
