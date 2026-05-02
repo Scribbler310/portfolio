@@ -103,6 +103,7 @@ export default function Dashboard({ riskProfile }) {
                   outerRadius={110}
                   paddingAngle={2}
                   dataKey="value"
+                  nameKey="name"
                   stroke="none"
                 >
                   {displayPortfolio.allocation.map((entry, index) => (
@@ -110,7 +111,7 @@ export default function Dashboard({ riskProfile }) {
                   ))}
                 </Pie>
                 <Tooltip 
-                  formatter={(value) => [`${value}%`, 'Allocation']}
+                  formatter={(value, name) => [`${value}%`, name]}
                   contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
                 />
               </PieChart>
