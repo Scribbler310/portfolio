@@ -12,6 +12,7 @@ import PortfolioHeatmap from '../components/PortfolioHeatmap';
 import FinancialCalculators from '../components/FinancialCalculators';
 import { LayoutGrid } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
+import StockSearch from '../components/StockSearch';
 
 export default function Dashboard({ riskProfile }) {
   const initialPortfolio = mockPortfolios[riskProfile];
@@ -76,6 +77,27 @@ export default function Dashboard({ riskProfile }) {
   const closeModal = () => setModalData(null);
   const closeStockPopup = () => setActivePopupAsset(null);
 
+  const handleAddStock = (newAsset) => {
+    setCurrentPortfolio(prev => {
+      const scale = (100 - newAsset.value) / 100;
+      const updatedExisting = prev.allocation.map(a => ({
+        ...a,
+        value: Number((a.value * scale).toFixed(2))
+      }));
+      
+      // Ensure sum is exactly 100
+      const currentSum = updatedExisting.reduce((acc, a) => acc + a.value, 0) + newAsset.value;
+      if (currentSum !== 100) {
+        updatedExisting[0].value += Number((100 - currentSum).toFixed(2));
+      }
+
+      return {
+        ...prev,
+        allocation: [...updatedExisting, newAsset]
+      };
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gs-light p-6 md:p-12 relative">
       <div className="max-w-7xl mx-auto">
@@ -88,10 +110,9 @@ export default function Dashboard({ riskProfile }) {
               Built for your goals. Transparently managed.
             </p>
           </div>
-          {/* Beta value hidden as requested */}
         </header>
 
-        {/* Top Section: Allocation (Moved to Top as requested) */}
+        {/* Top Section: Allocation */}
         <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row items-center mb-8">
           <div className="w-full md:w-1/2 h-64">
             <ResponsiveContainer width="100%" height="100%">
@@ -129,6 +150,11 @@ export default function Dashboard({ riskProfile }) {
                 <LayoutGrid size={18} />
               </button>
             </div>
+            
+            <div className="mb-6">
+              <StockSearch onAddStock={handleAddStock} />
+            </div>
+
             <p className="text-xs text-gs-slate mb-3 italic">Click an asset to view historical performance and AI analysis.</p>
             <div className="max-h-60 overflow-y-auto pr-2">
               {displayPortfolio.allocation.map((asset, idx) => (
@@ -169,7 +195,6 @@ export default function Dashboard({ riskProfile }) {
 
           {/* Right Column: Rebalancing Engine */}
           <div className="space-y-8">
-            {/* InvestmentCommittee removed from here, now inside StockPopup */}
             <RebalancingEngine onScenarioSelect={handleRebalance} />
           </div>
         </div>
@@ -180,13 +205,12 @@ export default function Dashboard({ riskProfile }) {
 
       <TransparencyModal isOpen={!!modalData} onClose={closeModal} data={modalData} />
       
-      {/* The new interactive Stock Popup */}
       <StockPopup 
         ticker={activePopupAsset?.ticker} 
         assetName={activePopupAsset?.name} 
         onClose={closeStockPopup} 
       />
-      {/* Heatmap Modal */}
+      
       <AnimatePresence>
         {showHeatmap && (
           <PortfolioHeatmap 
