@@ -1,0 +1,18 @@
+export const tickerMetrics = {
+  'SPY': { divYield: 1.32, beta: 1.00, expenseRatio: 0.09, peRatio: 26.5 },
+  'VOO': { divYield: 1.34, beta: 1.00, expenseRatio: 0.03, peRatio: 26.5 },
+  'BND': { divYield: 3.25, beta: 0.12, expenseRatio: 0.03, peRatio: 0 },
+  'BNDX': { divYield: 2.50, beta: 0.15, expenseRatio: 0.07, peRatio: 0 },
+  'AAPL': { divYield: 0.48, beta: 1.24, expenseRatio: 0, peRatio: 31.2 },
+  'MSFT': { divYield: 0.70, beta: 0.90, expenseRatio: 0, peRatio: 35.5 },
+  'GOOGL': { divYield: 0, beta: 1.05, expenseRatio: 0, peRatio: 28.2 },
+  'AMZN': { divYield: 0, beta: 1.15, expenseRatio: 0, peRatio: 42.1 },
+  'JNJ': { divYield: 3.00, beta: 0.55, expenseRatio: 0, peRatio: 18.5 },
+  'BRK-B': { divYield: 0, beta: 0.85, expenseRatio: 0, peRatio: 22.4 },
+  'JPM': { divYield: 2.30, beta: 1.10, expenseRatio: 0, peRatio: 12.5 },
+  'VXUS': { divYield: 3.12, beta: 1.05, expenseRatio: 0.07, peRatio: 15.4 },
+  'TSLA': { divYield: 0, beta: 2.31, expenseRatio: 0, peRatio: 72.8 },
+  'QQQ': { divYield: 0.61, beta: 1.18, expenseRatio: 0.20, peRatio: 35.1 },
+  'VTI': { divYield: 1.35, beta: 1.00, expenseRatio: 0.03, peRatio: 25.8 },
+  'CASH': { divYield: 4.50, beta: 0, expenseRatio: 0, peRatio: 0 },
+};
