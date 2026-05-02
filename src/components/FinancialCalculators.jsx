@@ -175,6 +175,20 @@ function CalculatorModal({ calc, onClose }) {
           </div>
 
           <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <InputGroup 
+                label="Current Age" 
+                name="age" 
+                value={inputs.age} 
+                onChange={handleInputChange} 
+              />
+              <InputGroup 
+                label="Retire Age" 
+                name="retirementAge" 
+                value={inputs.retirementAge} 
+                onChange={handleInputChange} 
+              />
+            </div>
             <InputGroup 
               label="Annual Salary" 
               name="salary" 
@@ -199,6 +213,22 @@ function CalculatorModal({ calc, onClose }) {
               onChange={handleInputChange} 
               suffix="%" 
             />
+            <div className="grid grid-cols-2 gap-4">
+              <InputGroup 
+                label="Current Tax" 
+                name="taxBracket" 
+                value={inputs.taxBracket} 
+                onChange={handleInputChange} 
+                suffix="%"
+              />
+              <InputGroup 
+                label="Retire Tax" 
+                name="futureTaxBracket" 
+                value={inputs.futureTaxBracket} 
+                onChange={handleInputChange} 
+                suffix="%"
+              />
+            </div>
             <InputGroup 
               label="Initial Savings" 
               name="initialSavings" 
@@ -353,62 +383,118 @@ function CompoundCalc({ inputs }) {
 }
 
 function RetirementCalc({ inputs }) {
-  // Similar logic but with withdrawal rates
+  const { salary, contribution, employerMatch, initialSavings, annualReturn, age, retirementAge } = inputs;
+  
+  const yearsToRetirement = retirementAge - age;
+  const annualContribution = salary * ((contribution + employerMatch) / 100);
+  const rate = annualReturn / 100;
+
+  // FV of current savings + FV of annual contributions
+  const fvInitial = initialSavings * Math.pow(1 + rate, yearsToRetirement);
+  const fvContributions = annualContribution * (Math.pow(1 + rate, yearsToRetirement) - 1) / rate;
+  const projectedTotal = fvInitial + fvContributions;
+
+  // Retirement Need: 80% of salary * 25 (4% rule)
+  const annualNeed = salary * 0.8;
+  const totalNeed = annualNeed * 25;
+  const gap = totalNeed - projectedTotal;
+
   return (
     <div className="space-y-6">
       <div className="p-8 bg-gs-light rounded-2xl border border-dashed border-gs-gold/50 flex flex-col items-center justify-center text-center">
         <Landmark size={48} className="text-gs-gold mb-4" />
         <h4 className="text-xl font-medium text-gs-navy mb-2">Retirement Readiness Analysis</h4>
-        <p className="text-gs-slate max-w-md">Based on your current salary of ${inputs.salary.toLocaleString()}, you should aim for a retirement fund of ${(inputs.salary * 10).toLocaleString()} to maintain your lifestyle.</p>
+        <p className="text-gs-slate max-w-md">
+          To maintain your lifestyle, you'll need approximately <span className="font-bold text-gs-navy">${(totalNeed / 1000000).toFixed(1)}M</span>. 
+          Your current path projects a fund of <span className="font-bold text-gs-navy">${(projectedTotal / 1000000).toFixed(1)}M</span> in {yearsToRetirement} years.
+        </p>
       </div>
       
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm text-center">
-          <p className="text-[10px] font-bold text-gs-slate uppercase tracking-tighter">Current Savings</p>
-          <p className="text-lg font-semibold text-gs-navy">${inputs.initialSavings.toLocaleString()}</p>
+          <p className="text-[10px] font-bold text-gs-slate uppercase tracking-tighter">Current Plan</p>
+          <p className="text-lg font-semibold text-gs-navy">${(projectedTotal / 1000000).toFixed(2)}M</p>
         </div>
         <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm text-center">
-          <p className="text-[10px] font-bold text-gs-slate uppercase tracking-tighter">Projected Gap</p>
-          <p className="text-lg font-semibold text-red-500">$2.4M</p>
+          <p className="text-[10px] font-bold text-gs-slate uppercase tracking-tighter">Projected {gap > 0 ? 'Gap' : 'Surplus'}</p>
+          <p={`text-lg font-semibold ${gap > 0 ? 'text-red-500' : 'text-green-600'}`}>
+            ${Math.abs(gap / 1000000).toFixed(2)}M
+          </p>
         </div>
         <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-sm text-center">
           <p className="text-[10px] font-bold text-gs-slate uppercase tracking-tighter">Savings Rate</p>
-          <p className="text-lg font-semibold text-green-600">{inputs.contribution + inputs.employerMatch}%</p>
+          <p className="text-lg font-semibold text-gs-gold">{contribution + employerMatch}%</p>
         </div>
+      </div>
+
+      <div className="mt-4 p-4 bg-gs-navy text-white rounded-xl text-xs font-light">
+        <p><span className="text-gs-gold font-bold">PROJECTION BASIS:</span> Assumes {annualReturn}% annual return, inflation-adjusted spending, and adherence to the 4% safe withdrawal rule. Modeling includes GS institutional market assumptions.</p>
       </div>
     </div>
   );
 }
 
 function TaxCalc({ inputs }) {
+  const { salary, contribution, initialSavings, annualReturn, age, retirementAge, taxBracket, futureTaxBracket } = inputs;
+  
+  const years = retirementAge - age;
+  const rate = annualReturn / 100;
+  const annualContribution = salary * (contribution / 100);
+
+  // Traditional IRA: Invest pre-tax, pay tax at withdrawal
+  const tradFV_Initial = initialSavings * Math.pow(1 + rate, years);
+  const tradFV_Cont = annualContribution * (Math.pow(1 + rate, years) - 1) / rate;
+  const tradNet = (tradFV_Initial + tradFV_Cont) * (1 - (futureTaxBracket / 100));
+
+  // Roth IRA: Invest after-tax, tax-free withdrawal
+  const rothInitial = initialSavings * (1 - (taxBracket / 100));
+  const rothAnnual = annualContribution * (1 - (taxBracket / 100));
+  const rothFV_Initial = rothInitial * Math.pow(1 + rate, years);
+  const rothFV_Cont = rothAnnual * (Math.pow(1 + rate, years) - 1) / rate;
+  const rothNet = rothFV_Initial + rothFV_Cont;
+
+  const winner = rothNet > tradNet ? "Roth" : "Traditional";
+  const diffPercent = Math.abs(((rothNet - tradNet) / Math.min(rothNet, tradNet)) * 100).toFixed(1);
+
   return (
     <div className="space-y-8">
-      <div className="flex gap-4">
-        <div className="flex-1 p-6 border border-purple-100 bg-purple-50/30 rounded-2xl">
-          <h4 className="text-purple-700 font-bold text-xs uppercase mb-4">Roth Strategy</h4>
-          <p className="text-gs-navy font-light">Pay taxes now at <span className="font-bold">{inputs.taxBracket}%</span>. Withdrawals are tax-free in retirement.</p>
-          <div className="mt-4 pt-4 border-t border-purple-100">
-            <span className="text-2xl font-semibold text-purple-700">$1,240,000</span>
-            <p className="text-xs text-purple-600">Net After-Tax Value</p>
+      <div className="flex flex-col md:flex-row gap-4">
+        <div className={`flex-1 p-6 border rounded-2xl transition-all ${winner === 'Roth' ? 'border-purple-200 bg-purple-50/30' : 'border-gray-100 bg-gray-50/50 opacity-80'}`}>
+          <h4 className="text-purple-700 font-bold text-xs uppercase mb-4 flex justify-between">
+            Roth Strategy {winner === 'Roth' && <span className="bg-purple-100 text-[8px] px-2 py-0.5 rounded-full text-purple-700">OPTIMAL</span>}
+          </h4>
+          <p className="text-gs-navy text-sm font-light leading-relaxed">Pay taxes now at <span className="font-bold">{taxBracket}%</span>. All future growth and withdrawals are <span className="text-purple-700 font-bold underline">100% Tax-Free</span>.</p>
+          <div className="mt-6 pt-6 border-t border-purple-100">
+            <span className="text-3xl font-semibold text-purple-700">${(rothNet / 1000).toFixed(0)}k</span>
+            <p className="text-xs text-purple-600 mt-1 uppercase tracking-wider font-bold">Estimated Net Wealth</p>
           </div>
         </div>
-        <div className="flex-1 p-6 border border-gs-navy/10 bg-gs-light rounded-2xl">
-          <h4 className="text-gs-navy font-bold text-xs uppercase mb-4">Traditional Strategy</h4>
-          <p className="text-gs-navy font-light">Deduct now. Pay taxes at <span className="font-bold">{inputs.futureTaxBracket}%</span> in retirement.</p>
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <span className="text-2xl font-semibold text-gs-navy">$1,105,000</span>
-            <p className="text-xs text-gs-slate">Net After-Tax Value</p>
+
+        <div className={`flex-1 p-6 border rounded-2xl transition-all ${winner === 'Traditional' ? 'border-gs-navy/20 bg-gs-light' : 'border-gray-100 bg-gray-50/50 opacity-80'}`}>
+          <h4 className="text-gs-navy font-bold text-xs uppercase mb-4 flex justify-between">
+            Traditional {winner === 'Traditional' && <span className="bg-gs-navy text-white text-[8px] px-2 py-0.5 rounded-full">OPTIMAL</span>}
+          </h4>
+          <p className="text-gs-navy text-sm font-light leading-relaxed">Get a tax deduction now. Entire balance is taxed at <span className="font-bold">{futureTaxBracket}%</span> during retirement.</p>
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <span className="text-3xl font-semibold text-gs-navy">${(tradNet / 1000).toFixed(0)}k</span>
+            <p className="text-xs text-gs-slate mt-1 uppercase tracking-wider font-bold">Estimated Net Wealth</p>
           </div>
         </div>
       </div>
 
-      <div className="bg-gs-navy text-white p-6 rounded-2xl flex justify-between items-center">
+      <div className="bg-gs-navy text-white p-6 rounded-2xl flex flex-col md:flex-row justify-between items-center gap-4">
         <div>
-          <h4 className="text-gs-gold font-bold text-xs uppercase mb-1">The Winner</h4>
-          <p className="text-xl font-light">The <span className="font-bold">Roth Strategy</span> provides 12% more net wealth.</p>
+          <h4 className="text-gs-gold font-bold text-[10px] uppercase tracking-widest mb-1">Strategic Selection</h4>
+          <p className="text-lg font-light">The <span className="font-bold text-gs-gold">{winner} Strategy</span> is projected to provide <span className="font-bold">{diffPercent}% more</span> spendable wealth.</p>
         </div>
-        <div className="p-3 bg-white/10 rounded-full">
-          <Percent className="text-gs-gold" size={24} />
+        <div className="flex items-center gap-3">
+          <div className="text-right hidden md:block">
+            <p className="text-[10px] text-gray-400 font-bold uppercase">Difference</p>
+            <p className="text-gs-gold font-bold">${Math.abs((rothNet - tradNet) / 1000).toFixed(0)}k</p>
+          </div>
+          <div className="p-3 bg-gs-gold/20 rounded-full border border-gs-gold/30">
+            <Percent className="text-gs-gold" size={24} />
+          </div>
         </div>
       </div>
     </div>
