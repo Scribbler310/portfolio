@@ -82,10 +82,7 @@ export default function Dashboard({ riskProfile }) {
               Built for your goals. Transparently managed.
             </p>
           </div>
-          <div className="hidden md:block text-right">
-            <span className="text-xs text-gs-slate uppercase tracking-widest block mb-1">Portfolio Beta</span>
-            <span className="text-xl font-medium text-gs-navy">{calculatedMetrics.avgBeta}</span>
-          </div>
+          {/* Beta value hidden as requested */}
         </header>
 
         {/* Top Section: Allocation (Moved to Top as requested) */}
