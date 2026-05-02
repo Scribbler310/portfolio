@@ -128,6 +128,12 @@ export default function Indicators({ portfolio }) {
                       <p className="text-xs text-gs-slate font-light leading-relaxed mb-4">
                         Risk isn't a guess. We measure how much your portfolio typically swings compared to the broader market to categorize your risk level.
                       </p>
+                      
+                      <div className="bg-white/80 p-3 rounded-xl border border-gs-gold/10 mb-4 flex justify-between items-center shadow-sm">
+                        <span className="text-[10px] uppercase tracking-widest text-gs-slate font-bold">Portfolio Beta</span>
+                        <span className="text-xl font-bold text-gs-navy">{portfolio.avgBeta}</span>
+                      </div>
+
                       <div className="space-y-2">
                         <div className="flex justify-between text-[10px] uppercase tracking-wider text-gs-slate font-bold">
                           <span>Low Risk</span>

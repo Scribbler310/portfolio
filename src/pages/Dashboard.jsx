@@ -8,6 +8,9 @@ import RebalancingEngine from '../components/RebalancingEngine';
 import TransparencyModal from '../components/TransparencyModal';
 import MacroTracker from '../components/MacroTracker';
 import StockPopup from '../components/StockPopup';
+import PortfolioHeatmap from '../components/PortfolioHeatmap';
+import { LayoutGrid } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
 
 export default function Dashboard({ riskProfile }) {
   const initialPortfolio = mockPortfolios[riskProfile];
@@ -16,6 +19,7 @@ export default function Dashboard({ riskProfile }) {
   
   // State for the new stock popup
   const [activePopupAsset, setActivePopupAsset] = useState(null);
+  const [showHeatmap, setShowHeatmap] = useState(false);
 
   // Dynamic Calculation of Health and Risk based on real metrics
   const calculatedMetrics = useMemo(() => {
@@ -60,7 +64,8 @@ export default function Dashboard({ riskProfile }) {
   const displayPortfolio = {
     ...currentPortfolio,
     healthScore: calculatedMetrics.healthScore,
-    riskLevel: calculatedMetrics.riskLevel
+    riskLevel: calculatedMetrics.riskLevel,
+    avgBeta: calculatedMetrics.avgBeta
   };
 
   const handleRebalance = (scenario) => {
@@ -112,7 +117,16 @@ export default function Dashboard({ riskProfile }) {
             </ResponsiveContainer>
           </div>
           <div className="w-full md:w-1/2 space-y-4">
-            <h3 className="text-xl font-medium text-gs-navy mb-4">Current Allocation</h3>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-medium text-gs-navy">Current Allocation</h3>
+              <button 
+                onClick={() => setShowHeatmap(true)}
+                className="text-gs-slate hover:text-gs-gold transition-colors p-1"
+                title="View Heatmap"
+              >
+                <LayoutGrid size={18} />
+              </button>
+            </div>
             <p className="text-xs text-gs-slate mb-3 italic">Click an asset to view historical performance and AI analysis.</p>
             <div className="max-h-60 overflow-y-auto pr-2">
               {displayPortfolio.allocation.map((asset, idx) => (
@@ -169,6 +183,15 @@ export default function Dashboard({ riskProfile }) {
         assetName={activePopupAsset?.name} 
         onClose={closeStockPopup} 
       />
+      {/* Heatmap Modal */}
+      <AnimatePresence>
+        {showHeatmap && (
+          <PortfolioHeatmap 
+            onClose={() => setShowHeatmap(false)} 
+            allocation={displayPortfolio.allocation} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
