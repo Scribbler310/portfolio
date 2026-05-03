@@ -45,15 +45,60 @@ const basePrices = {
 
 const mockDataCache = {};
 
+export const fetchRealData = async (ticker) => {
+  if (ticker === 'CASH') return getHistoricalData('CASH');
+  
+  try {
+    const proxy = 'https://corsproxy.io/?';
+    const url = `${proxy}https://query1.finance.yahoo.com/v8/finance/chart/${ticker}?interval=1d&range=1y`;
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (!data.chart?.result?.[0]) throw new Error('Invalid ticker');
+    
+    const result = data.chart.result[0];
+    const timestamps = result.timestamp;
+    const quotes = result.indicators.quote[0].close;
+    
+    const history = timestamps.map((ts, i) => {
+      const date = new Date(ts * 1000);
+      return {
+        time: date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+        date: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        price: Number(quotes[i]?.toFixed(2)) || 0
+      };
+    }).filter(d => d.price > 0);
+
+    const currentPrice = history[history.length - 1].price;
+    const oldPrice = history[0].price;
+    const change = currentPrice - oldPrice;
+    const percentChange = (change / oldPrice) * 100;
+
+    const finalData = {
+      ticker,
+      currentPrice: Number(currentPrice.toFixed(2)),
+      change: Number(change.toFixed(2)),
+      percentChange: Number(percentChange.toFixed(2)),
+      isPositive: change >= 0,
+      history
+    };
+
+    mockDataCache[ticker] = finalData;
+    return finalData;
+  } catch (error) {
+    console.error("Yahoo Finance Error:", error);
+    return getHistoricalData(ticker); // Fallback to mock
+  }
+};
+
 export const getHistoricalData = (ticker) => {
   if (mockDataCache[ticker]) {
     return mockDataCache[ticker];
   }
 
   const startPrice = basePrices[ticker] || 100;
-  // Use beta as a proxy for volatility. Higher beta = higher daily swings
   const metrics = tickerMetrics[ticker] || { beta: 1 };
-  const volatility = (metrics.beta * 0.015); // 1.5% base daily volatility scaled by beta
+  const volatility = (metrics.beta * 0.015);
   
   const history = generateRandomWalk(startPrice, 365, volatility);
   const currentPrice = history[history.length - 1].price;

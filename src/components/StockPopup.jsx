@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { X, TrendingUp, TrendingDown, Star } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { getHistoricalData } from '../data/historicalData';
+import { getHistoricalData, fetchRealData } from '../data/historicalData';
+import { Loader2 } from 'lucide-react';
 import InvestmentCommittee from './InvestmentCommittee';
 
 const TIMEFRAME_DAYS = {
@@ -14,14 +15,21 @@ const TIMEFRAME_DAYS = {
 
 export default function StockPopup({ ticker, assetName, onClose }) {
   const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
   const [isDebating, setIsDebating] = useState(false);
   const [timeframe, setTimeframe] = useState('1M');
 
   useEffect(() => {
-    if (ticker) {
-      setData(getHistoricalData(ticker));
-      setIsDebating(false); // Reset debating state on new ticker
+    async function loadData() {
+      if (ticker) {
+        setLoading(true);
+        const realData = await fetchRealData(ticker);
+        setData(realData);
+        setLoading(false);
+        setIsDebating(false);
+      }
     }
+    loadData();
   }, [ticker]);
 
   const viewData = useMemo(() => {
@@ -50,7 +58,18 @@ export default function StockPopup({ ticker, assetName, onClose }) {
     };
   }, [data, timeframe]);
 
-  if (!ticker || !viewData) return null;
+  if (!ticker) return null;
+
+  if (loading || !viewData) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="text-center">
+          <Loader2 className="animate-spin text-gs-gold mb-4 mx-auto" size={48} />
+          <p className="text-white text-lg font-light">Connecting to Yahoo Finance...</p>
+        </div>
+      </div>
+    );
+  }
 
   const color = viewData.isPositive ? '#00C805' : '#FF5000';
   const bgColor = '#111111'; // Dark theme background
