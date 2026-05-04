@@ -4,7 +4,14 @@ import LandingPage from './pages/LandingPage';
 import Dashboard from './pages/Dashboard';
 
 function App() {
-  const [riskProfile, setRiskProfile] = useState(null);
+  const [riskProfile, setRiskProfile] = useState(() => {
+    return localStorage.getItem('gs_risk_profile') || null;
+  });
+
+  const handleSetRiskProfile = (profile) => {
+    setRiskProfile(profile);
+    localStorage.setItem('gs_risk_profile', profile);
+  };
 
   return (
     <Router>
@@ -12,7 +19,7 @@ function App() {
         <Routes>
           <Route 
             path="/" 
-            element={<LandingPage setRiskProfile={setRiskProfile} />} 
+            element={<LandingPage setRiskProfile={handleSetRiskProfile} />} 
           />
           <Route 
             path="/dashboard" 

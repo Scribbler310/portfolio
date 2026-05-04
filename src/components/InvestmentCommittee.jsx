@@ -13,22 +13,34 @@ const agents = {
 
 const mockDebates = {
   'AAPL': [
-    { agent: 'macro', text: 'People are still buying phones, but they aren\'t upgrading as often. This means slower growth, but the company remains highly stable.' },
-    { agent: 'tech', text: 'The stock price is resting at a strong historical support level. If it holds here, it’s a good sign for long-term buyers.' },
-    { agent: 'skeptic', text: 'They rely too much on hardware sales. However, their services (like App Store and Music) provide a strong, reliable safety net.' },
-    { agent: 'system', text: 'Reason: Stable services income offsets slower hardware sales. It\'s a reliable hold. Conviction Score: 65/100 (Hold).' }
+    { agent: 'macro', text: 'iPhone demand remains steady globally, but services growth is the real story for Apple.' },
+    { agent: 'tech', text: 'AAPL is consolidating near its 200-day average. A breakout above current levels would be very bullish.' },
+    { agent: 'skeptic', text: 'Regulatory pressure in the EU and US is a massive dark cloud that could hurt margins.' },
+    { agent: 'system', text: 'Consensus: Strong ecosystem but legal risks. Conviction Score: 72/100 (Hold).' }
   ],
   'TSLA': [
-    { agent: 'macro', text: 'Car loans are expensive right now, which makes it harder for people to buy new electric vehicles. This is a temporary headwind.' },
-    { agent: 'tech', text: 'The stock has dropped recently. It’s best to wait until the price stops falling before buying more.' },
-    { agent: 'skeptic', text: 'The company has had to cut prices, which hurts profits. The promise of robots is exciting, but car sales pay the bills today.' },
-    { agent: 'system', text: 'Reason: High risk due to price cuts, but strong long-term potential. Conviction Score: 40/100 (Underweight).' }
+    { agent: 'macro', text: 'High interest rates are cooling the EV market, forcing aggressive price cuts.' },
+    { agent: 'tech', text: 'Tesla is in a clear downtrend. We need to see a higher low before turning bullish.' },
+    { agent: 'skeptic', text: 'Elon is distracted and competition from China is fierce. Valuation is still disconnected from reality.' },
+    { agent: 'system', text: 'Consensus: High volatility and macro headwinds. Conviction Score: 35/100 (Underweight).' }
+  ],
+  'NVDA': [
+    { agent: 'macro', text: 'The AI infrastructure build-out is a once-in-a-generation shift that favors NVIDIA.' },
+    { agent: 'tech', text: 'Parabolic move. It is overextended, but momentum like this can last longer than expected.' },
+    { agent: 'skeptic', text: 'At some point, the hyperscalers will stop buying at this rate. The drop will be as fast as the rise.' },
+    { agent: 'system', text: 'Consensus: Unrivaled leader in a booming sector. Conviction Score: 88/100 (Overweight).' }
+  ],
+  'MSFT': [
+    { agent: 'macro', text: 'Enterprise software and cloud (Azure) are the backbone of the modern economy.' },
+    { agent: 'tech', text: 'Steady uptrend. Microsoft is a "safe haven" in the tech world right now.' },
+    { agent: 'skeptic', text: 'The Activision deal is done, but integrating it perfectly won\'t be easy or cheap.' },
+    { agent: 'system', text: 'Consensus: Solid growth and AI tailwinds. Conviction Score: 82/100 (Overweight).' }
   ],
   'default': [
-    { agent: 'macro', text: 'This asset broadly tracks economic growth. We see a soft landing scenario which is generally supportive.' },
-    { agent: 'tech', text: 'Trend is generally upward with normal pullbacks. Looks like a solid long-term hold.' },
-    { agent: 'skeptic', text: 'While steady, don\'t expect massive alpha. Keep an eye on broad market valuations.' },
-    { agent: 'system', text: 'Solid foundation, low risk. Conviction Score: 85/100 (Overweight).' }
+    { agent: 'macro', text: 'The macro outlook for [TICKER] is heavily dependent on current sector trends and inflationary pressures affecting production costs.' },
+    { agent: 'tech', text: '[TICKER] is currently testing a key resistance level. We need to see sustained volume before confirming a new upward trajectory.' },
+    { agent: 'skeptic', text: 'A primary concern for [TICKER] is the potential for margin compression if competitors maintain aggressive pricing strategies.' },
+    { agent: 'system', text: 'Consensus: Position is stable for [TICKER], but suggests a cautious stance until quarterly data confirms growth. Conviction Score: 62/100 (Neutral).' }
   ]
 };
 
@@ -37,6 +49,12 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
   const [convictionScore, setConvictionScore] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef(null);
+
+  useEffect(() => {
+    setMessages([]);
+    setConvictionScore(null);
+    setIsDebating(false);
+  }, [ticker]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -54,7 +72,6 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
     const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
     if (apiKey && apiKey.length > 10) {
-      // Live LangChain AI Agents using Gemini
       try {
         const llm = new ChatGoogleGenerativeAI({ 
           apiKey: apiKey, 
@@ -63,40 +80,40 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
         });
         
         // Agent 1: Macro
-        setMessages([{ agent: 'macro', text: 'Analyzing macroeconomic environment...' }]);
+        setMessages([{ agent: 'macro', text: `Quantifying macro factors for ${ticker}...` }]);
         const macroResponse = await llm.invoke([
-          new SystemMessage("You are a Macro Economist advising a beginner investor. Analyze the stock in 1 short, jargon-free sentence based on economic trends. Give a clear reason."),
-          new HumanMessage(`Analyze ticker: ${ticker}`)
+          new SystemMessage(`You are a top-tier Macro Economist. Analyze the stock ${ticker} with extreme specificity. Mention a specific economic factor like "global logistics", "energy costs", or "labor markets" as it relates to this EXACT company. Provide a 12-month price target. 1 short sentence.`),
+          new HumanMessage(`What is your unique macro view on ${ticker}?`)
         ]);
         setMessages([{ agent: 'macro', text: macroResponse.content }]);
 
         // Agent 2: Tech
-        setMessages(prev => [...prev, { agent: 'tech', text: 'Analyzing charts and momentum...' }]);
+        setMessages(prev => [...prev, { agent: 'tech', text: `Evaluating technical metrics for ${ticker}...` }]);
         const techResponse = await llm.invoke([
-          new SystemMessage("You are a Technical Analyst advising a beginner investor. Provide a 1-sentence view on the stock's trend using simple language. Avoid terms like 'moving average' or 'support'. Give a clear reason."),
-          new HumanMessage(`Analyze ticker: ${ticker}`)
+          new SystemMessage(`You are a Technical Analyst. Analyze ${ticker}'s price chart. Mention a specific "support zone", "RSI divergence", or "moving average cross" observation for this company. Provide a specific Fair Value. 1 sentence.`),
+          new HumanMessage(`Provide a non-generic technical view on ${ticker}.`)
         ]);
         setMessages(prev => [prev[0], { agent: 'tech', text: techResponse.content }]);
 
         // Agent 3: Skeptic
-        setMessages(prev => [...prev, { agent: 'skeptic', text: 'Looking for risks and flaws...' }]);
+        setMessages(prev => [...prev, { agent: 'skeptic', text: `Quantifying downside risks for ${ticker}...` }]);
         const skepticResponse = await llm.invoke([
-          new SystemMessage("You are a Skeptic advising a beginner. Point out the biggest risk in 1 short, easy-to-understand sentence. Give a clear reason without causing panic."),
-          new HumanMessage(`Analyze ticker: ${ticker}`)
+          new SystemMessage(`You are a Professional Skeptic. Find a "poison pill" for ${ticker}. What is the one specific, non-obvious risk (e.g. patent cliff, specific litigation, supply chain bottleneck) for this stock? 1 sentence.`),
+          new HumanMessage(`What is the hidden risk in ${ticker}?`)
         ]);
         setMessages(prev => [prev[0], prev[1], { agent: 'skeptic', text: skepticResponse.content }]);
 
         // System consensus
-        setMessages(prev => [...prev, { agent: 'system', text: 'Calculating consensus...' }]);
+        setMessages(prev => [...prev, { agent: 'system', text: 'Synthesizing quantitative consensus...' }]);
         const consensusResponse = await llm.invoke([
-          new SystemMessage("You are the Committee Moderator. Given the 3 previous opinions, output ONLY a number between 0 and 100 representing the final Conviction Score."),
-          new HumanMessage(`Opinions: 1. ${macroResponse.content} 2. ${techResponse.content} 3. ${skepticResponse.content}`)
+          new SystemMessage("Committee Moderator. Based on the previous data points, output a final Conviction Score (0-100). Format: [SCORE] followed by a 1-sentence quantitative justification."),
+          new HumanMessage(`Synthesize these quantitative views for ${ticker}: 1. ${macroResponse.content} 2. ${techResponse.content} 3. ${skepticResponse.content}`)
         ]);
         
         let score = parseInt(consensusResponse.content.replace(/\D/g,''));
         if (isNaN(score)) score = 50;
         
-        setMessages(prev => [prev[0], prev[1], prev[2], { agent: 'system', text: `Debate concluded. Generating final metrics.` }]);
+        setMessages(prev => [prev[0], prev[1], prev[2], { agent: 'system', text: consensusResponse.content }]);
         setConvictionScore(score);
 
       } catch (error) {
@@ -104,7 +121,6 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
         runMockDebate();
       }
     } else {
-      // Mock Fallback
       runMockDebate();
     }
     
@@ -112,9 +128,13 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
   };
 
   const runMockDebate = () => {
-    const debateScript = mockDebates[ticker] || mockDebates['default'];
+    const script = mockDebates[ticker] || mockDebates['default'];
+    const debateScript = script.map(msg => ({
+      ...msg,
+      text: msg.text.replace(/\[TICKER\]/g, ticker)
+    }));
+
     let step = 0;
-    
     const interval = setInterval(() => {
       if (step < debateScript.length) {
         const msg = debateScript[step];
@@ -128,7 +148,7 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
         clearInterval(interval);
         setLoading(false);
       }
-    }, 1500); // 1.5 seconds per message for realistic reading time
+    }, 1200);
   };
 
   return (
@@ -195,14 +215,22 @@ export default function InvestmentCommittee({ ticker, isDebating, setIsDebating 
           animate={{ opacity: 1, scale: 1 }}
           className="mt-4 pt-4 border-t"
         >
-          <div className="flex justify-between items-center bg-gs-light p-4 rounded-xl">
-            <span className="font-medium text-gs-navy">Consensus Conviction Score</span>
-            <div className="flex items-center">
-              <span className={`text-2xl font-bold ${convictionScore >= 70 ? 'text-green-600' : convictionScore >= 40 ? 'text-gs-gold' : 'text-red-500'}`}>
-                {convictionScore}
-              </span>
-              <span className="text-gray-400 ml-1">/ 100</span>
+          <div className="bg-gs-light p-4 rounded-xl">
+            <div className="flex justify-between items-center">
+              <span className="font-medium text-gs-navy">Consensus Conviction Score</span>
+              <div className="flex items-center">
+                <span className={`text-2xl font-bold ${convictionScore >= 70 ? 'text-green-600' : convictionScore >= 40 ? 'text-gs-gold' : 'text-red-500'}`}>
+                  {convictionScore}
+                </span>
+                <span className="text-gray-400 ml-1">/ 100</span>
+              </div>
             </div>
+            <p className="text-[10px] text-gs-slate mt-2 italic leading-tight border-t border-gray-200 pt-2">
+              The committee's confidence in this asset's current risk-to-reward. 
+              <span className="font-bold ml-1">70+ Overweight</span>, 
+              <span className="font-bold ml-1">40-69 Hold</span>, 
+              <span className="font-bold ml-1">Below 40 Underweight</span>.
+            </p>
           </div>
         </motion.div>
       )}
